@@ -17,7 +17,7 @@ elif [ $1 != "off" ]; then
 fi;
 
 # Get some passwords in the variables
-source ~/.bash_aliases;
+source ~/toolbox/codes.bash;
 
 # Command to use
 RECEIVER=5;

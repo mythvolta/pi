@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Get some passwords in the variables
-source ~/.bash_aliases;
+source ~/toolbox/codes.bash;
 
 # Update the database
 $MPC update;
