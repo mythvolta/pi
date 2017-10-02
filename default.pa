@@ -1,0 +1,7 @@
+#! /usr/bin/pulseaudio -nF
+
+load-module module-native-protocol-unix
+load-module module-suspend-on-idle timeout=1
+
+load-module module-null-sink sink_name=rtp
+load-module module-rtp-send source=rtp.monitor
