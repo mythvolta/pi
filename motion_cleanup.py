@@ -24,8 +24,8 @@ class Folder:
 
 # Subdirectories to sort through
 folders = list()
-folders.append(Folder('pictures',  7))    # 1 week
 folders.append(Folder('movies',    7*4))  # 4 weeks
+folders.append(Folder('pictures',  7*10)) # 10 weeks
 folders.append(Folder('timelapse', 7*52)) # 1 year
 
 # Get the current time
@@ -46,3 +46,8 @@ for d in folders:
     # if
   # f
 # for
+
+# Turn off blue led on logitech camera
+#apt-get install uvcdynctr
+#uvcdynctrl -i /usr/share/uvcdynctrl/data/046d/logitech.xml
+#uvcdynctrl -s 'LED1 Mode' 0
