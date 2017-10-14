@@ -10,7 +10,7 @@ for LINE in `lsof -c $SCRIPT -F p`; do
 done
 
 # Kill all old instances of motion that may be hanging
-sudo pkill -9 -f -x motion
+sudo pkill -9 -f motion
 
 # Turn off blue led on logitech camera
 uvcdynctrl -i /usr/share/uvcdynctrl/data/046d/logitech.xml
