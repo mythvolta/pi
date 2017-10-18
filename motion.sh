@@ -3,11 +3,9 @@
 
 # Ensure that only one version of motion is running
 SCRIPT=`basename $0`
-for LINE in `lsof -c $SCRIPT -F p`; do 
-  if [ $$ -gt ${LINE#?} ] ; then
-    exit 0
-  fi
-done
+if [ $(pidof -x $SCRIPT | wc -w) -gt 2 ]; then
+  exit 0
+fi
 
 # Kill all old instances of motion that may be hanging
 sudo pkill -9 -f "motion -n"
