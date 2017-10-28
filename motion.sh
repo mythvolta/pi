@@ -11,7 +11,7 @@ fi
 sudo pkill -9 -f "motion -n"
 
 # Turn off blue led on logitech camera
-uvcdynctrl -i /usr/share/uvcdynctrl/data/046d/logitech.xml
+#uvcdynctrl -i /usr/share/uvcdynctrl/data/046d/logitech.xml
 uvcdynctrl -s 'LED1 Mode' 0
 
 # Start motion but not in daemon mode
