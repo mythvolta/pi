@@ -1,0 +1,12 @@
+# Ignore objects and dependencies
+*.o
+*.d
+
+# Ignore log files
+*.log
+
+# Ignore default binaries
+a.out
+
+# Ignore binaries
+elder_control
