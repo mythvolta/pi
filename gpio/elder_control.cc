@@ -2,6 +2,9 @@
 
 #include "elder_control.h"
 
+// Cheap global variable
+static uint16_t led_brightness = 0;
+
 // Run forever, requires root privileges
 int main() {
   // Use the GPIO numbers for setup
@@ -33,22 +36,22 @@ int main() {
 
 // Turn the LED off
 int led_off() {
+  led_brightness = 0;
+  std::cout << "LED brightness reset to " << led_brightness << std::endl;
   digitalWrite(GPIO_LED, LOW);
 }
 
-// Change the LED brightness between 6 possibilities
-// Off, 25%, 50%, 75%, 100%, and blink
+// Change the LED brightness between 5 possibilities
+// Off, 25%, 50%, 75%, and full on
 int led_cycle_brightness() {
-  static int brightness = 0;
-
-  // Make sure we don't go above 5
-  if (++brightness > 5) {
-    brightness = 0;
+  // Make sure we don't go above 4
+  if (++led_brightness > 4) {
+    led_brightness = 0;
   }
-  std::cout << "LED brightness cycled to " << brightness << std::endl;
+  std::cout << "LED brightness cycled to " << led_brightness << std::endl;
 
   // Actually just alternate between ON and OFF
-  //digitalWrite(GPIO_LED, (brightness % 2);
+  //digitalWrite(GPIO_LED, (led_brightness % 2);
 }
 
 // Pulse the LED a few times before powering down
@@ -120,7 +123,7 @@ void button_action() {
           button_held = false;
         }
         // At 1 second, turn the LED off
-        else if (hold_intervals * DEBOUNCE_TIME >= 1000) {
+        else if (hold_intervals * DEBOUNCE_TIME == 1000) {
           led_off();
         }
       }
