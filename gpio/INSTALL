@@ -1,0 +1,6 @@
+# Installation instructions for wiringPi etc.
+
+$ cd ~/code
+$ git clone git://git.drogon.net/wiringPi
+$ cd wiringPi/
+$ ./build
