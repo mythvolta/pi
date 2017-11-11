@@ -1,15 +1,17 @@
 # Global variables
 CC         := gcc
 CXX        := g++
-INCDIR     := .
+SRCDIR     := src
+INCDIR     := include
+BINDIR     := bin
 CFLAGS     := -O2 -g
-CPPFLAGS   := -std=c++17
+CPPFLAGS   := -std=c++14 -I$(INCDIR)
 LDFLAGS    := -lwiringPi -lpthread
 RM         := rm -f
-BIN        := $(INCDIR)/elder_control
+BIN        := $(BINDIR)/elder_control
 
 # We will auto-generate dependencies
-SRCS := $(INCDIR)/elder_control.cc
+SRCS := $(SRCDIR)/elder_control.cc
 OBJS  = $(SRCS:.cc=.o)
 DEPS  = $(SRCS:.cc=.d)
 
