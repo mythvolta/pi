@@ -17,20 +17,34 @@ int main() {
   // Set up the GPIO ports
   gpio_setup();
 
-  // Turn off the LED to start
-  led_off();
-
   // Watch for rising edge of the button
   wiringPiISR(GPIO_BTN, INT_EDGE_RISING, &button_action);
 
-  // Monitor temperature to control the fan in a new thread
-  std::thread thread_fan(fan_control);
+  // Keep track of how many other threads are running
+  uint16_t num_threads = 0;
+
+  // Use a new thread to see if we should be blinking the LED
+#ifdef HAS_LED
+  led_off();
   std::thread thread_led(led_blink);
+  ++num_threads;
+#endif // HAS_LED
+
+  // Monitor temperature to control the fan in a new thread
+#ifdef HAS_FAN
+  std::thread thread_fan(fan_control);
+  ++num_threads;
+#endif // HAS_FAN
 
   // Join all the threads to exit
-  std::cout << "Waiting in the main thread" << std::endl;
-  thread_fan.join();
+  std::cout << "Waiting on " << num_threads << " thread"
+    << ((num_threads != 1) ? "s" : "") << " to exit" << std::endl;
+#ifdef HAS_LED
   thread_led.join();
+#endif // HAS_LED
+#ifdef HAS_FAN
+  thread_fan.join();
+#endif // HAS_FAN
 
   std::cout << "Finished, exiting from the main thread" << std::endl;
   return 0;
@@ -58,11 +72,16 @@ void gpio_setup() {
   pwmSetRange(128);
 
   // Set up all the pins
-  pinMode(GPIO_LED, PWM_OUTPUT);
   pinMode(GPIO_BTN, INPUT);
+#ifdef HAS_LED
+  pinMode(GPIO_LED, PWM_OUTPUT);
+#endif // HAS_LED
+#ifdef HAS_FAN
   pinMode(GPIO_FAN, OUTPUT);
+#endif // HAS_FAN
 }
 
+#ifdef HAS_LED
 // Turn the LED off
 int led_off() {
   led_brightness = 0;
@@ -140,7 +159,9 @@ int led_pulse() {
   // Return
   return val;
 }
+#endif // HAS_LED
 
+#ifdef HAS_FAN
 // Power the fan on or off
 void fan_power(bool on) {
   std::cout << "Turning fan " << (on ? "on" : "off") << std::endl;
@@ -190,6 +211,7 @@ void fan_control() {
   // Return, though this should never happen
   return;
 }
+#endif // HAS_FAN
 
 // Debounce the button, and check to see how long it was held
 void button_action() {
@@ -201,9 +223,11 @@ void button_action() {
   if (time_current - time_previous > DEBOUNCE_TIME) {
     // Immediately cycle the brightness of the LED,
     //  unless the fan is stuck on
+#ifdef HAS_LED
     if (!fan_override) {
       led_cycle_brightness();
     }
+#endif // HAS_LED
 
     // Check every 100 ms until it is no longer held
     unsigned int hold_intervals = 0;
@@ -215,19 +239,27 @@ void button_action() {
 
         // At 3 seconds, pulse the LED, then exit
         if (hold_intervals * DEBOUNCE_TIME >= 3000) {
+#ifdef HAS_LED
           led_pulse();
+#endif // HAS_LED
           button_held = false;
         }
         // At 2.4 seconds, turn off fan_override mode again
         else if (hold_intervals * DEBOUNCE_TIME == 2400) {
           fan_override = !fan_override;
+#ifdef HAS_FAN
           fan_power(fan_override);
+#endif // HAS_FAN
         }
         // At 1 second, switch between fan_override mode
         else if (hold_intervals * DEBOUNCE_TIME == 1000) {
+#ifdef HAS_LED
           led_off();
+#endif // HAS_LED
           fan_override = !fan_override;
+#ifdef HAS_FAN
           fan_power(fan_override);
+#endif // HAS_FAN
         }
       }
       else {

@@ -7,6 +7,10 @@
 #include <sys/reboot.h>
 #include <wiringPi.h>
 
+// Easily disable the LED or the fan
+#define HAS_LED
+#define HAS_FAN
+
 // There is one LED, two buttons, and a fan
 #define GPIO_LED    18 // The LED is connected to GPIO18 (pin 12, WPi 1) in ALT5 mode for PWM
 #define GPIO_BTN    27 // Button A is connected to GPIO27 (pin 13, WPi 2)
@@ -26,14 +30,18 @@ bool user_is_root();
 void gpio_setup();
 
 // Control the LED
+#ifdef HAS_LED
 int led_off();
 int led_cycle_brightness();
 void led_blink();
 int led_pulse();
+#endif // HAS_LED
 
-// Turn the fan on or off based on CPU/GPU temperature
+// Turn the fan on or off based on CPU temperature
+#ifdef HAS_FAN
 void fan_power(bool on);
 void fan_control();
+#endif // HAS_FAN
 
 // Handle button presses
 void button_action();
