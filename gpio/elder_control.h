@@ -3,6 +3,8 @@
 #include <iostream>
 #include <thread>
 #include <unistd.h>
+#include <linux/reboot.h>
+#include <sys/reboot.h>
 #include <wiringPi.h>
 
 // There is one LED, two buttons, and a fan
@@ -17,13 +19,20 @@
 // Run forever, requires root privileges
 int main();
 
+// Check to ensure that the user is root
+bool user_is_root();
+
+// Set up the GPIO pins and clocks
+void gpio_setup();
+
 // Control the LED
 int led_off();
 int led_cycle_brightness();
-int led_blink();
+void led_blink();
 int led_pulse();
 
 // Turn the fan on or off based on CPU/GPU temperature
+void fan_power(bool on);
 void fan_control();
 
 // Handle button presses
