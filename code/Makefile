@@ -8,10 +8,10 @@ CFLAGS     := -O2 -g
 CPPFLAGS   := -std=c++14 -I$(INCDIR)
 LDFLAGS    := -lwiringPi -lpthread
 RM         := rm -f
-BIN        := $(BINDIR)/elder_control
+BIN        := $(BINDIR)/gpio_button_led_fan
 
 # We will auto-generate dependencies
-SRCS := $(SRCDIR)/elder_control.cc
+SRCS := $(SRCDIR)/gpio_button_led_fan.cc
 OBJS  = $(SRCS:.cc=.o)
 DEPS  = $(SRCS:.cc=.d)
 
@@ -20,6 +20,7 @@ all: debug $(BIN)
 
 # Actually build the binary
 $(BIN) : $(OBJS)
+	mkdir -p $(BINDIR)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@
 
 # Auto-generate dependencies for all .cc files

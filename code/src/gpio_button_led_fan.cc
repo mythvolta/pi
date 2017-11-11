@@ -1,6 +1,6 @@
 // Perform a variety of functions on the raspberry pi 3
 
-#include "elder_control.h"
+#include "gpio_button_led_fan.h"
 
 // Cheap global variables
 static uint16_t led_brightness = 0; // Range is [0, 4]
