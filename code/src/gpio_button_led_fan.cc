@@ -5,7 +5,7 @@
 // Cheap global variables
 static uint16_t led_brightness = 0; // Range is [0, 4]
 static bool fan_override = false;
-const static int brightness_modes[5] = {0, 1, 5, 20, 128};
+const static int brightness_modes[5] = {0, 1, 8, 32, 128};
 
 // Run forever, requires root privileges
 int main() {
@@ -24,27 +24,16 @@ int main() {
   uint16_t num_threads = 0;
 
   // Use a new thread to see if we should be blinking the LED
-#ifdef HAS_LED
   led_off();
   std::thread thread_led(led_blink);
-  ++num_threads;
-#endif // HAS_LED
 
   // Monitor temperature to control the fan in a new thread
-#ifdef HAS_FAN
   std::thread thread_fan(fan_control);
-  ++num_threads;
-#endif // HAS_FAN
 
   // Join all the threads to exit
-  std::cout << "Waiting on " << num_threads << " thread"
-    << ((num_threads != 1) ? "s" : "") << " to exit" << std::endl;
-#ifdef HAS_LED
+  std::cout << "Waiting on both threads to exit" << std::endl;
   thread_led.join();
-#endif // HAS_LED
-#ifdef HAS_FAN
   thread_fan.join();
-#endif // HAS_FAN
 
   std::cout << "Finished, exiting from the main thread" << std::endl;
   return 0;
@@ -81,14 +70,45 @@ void gpio_setup() {
 #endif // HAS_FAN
 }
 
-#ifdef HAS_LED
+// Write directly to the /sys/ filesystesm
+void sysfs_write(const std::string &path, const std::string &filename,
+                 const std::string &value) {
+  std::cout << "Writing " << value << " to " << path << "/" << filename << std::endl;
+  std::ofstream fs;
+  fs.open((path + "/" + filename).c_str());
+  fs << value;
+  fs.close();
+}
+
+// Actually power off the system
+int power_off() {
+  std::cout << "Powering off" << std::endl;
+  sync();
+  const int val = reboot(LINUX_REBOOT_CMD_POWER_OFF);
+  if (val != 0) {
+    std::cout << "Error shutting down, returned " << val << std::endl;
+  }
+
+  // Blink the led in error if we get this far
+  fan_override = true;
+
+  // Return
+  return val;
+}
+
 // Turn the LED off
 int led_off() {
   led_brightness = 0;
   std::cout << "LED brightness reset to 0" << std::endl;
+#ifdef HAS_LED
   pwmWrite(GPIO_LED, 0);
+#else // Internal LED
+  sysfs_write(SYSFS_LED, "trigger", "none");
+  sysfs_write(SYSFS_LED, "brightness", "0");
+#endif // HAS_LED
 }
 
+#ifdef HAS_LED
 // Change the LED brightness between 5 possibilities
 // Off, 25%, 50%, 75%, and full on
 int led_cycle_brightness() {
@@ -110,27 +130,9 @@ int led_cycle_brightness() {
   return 0;
 }
 
-// Blink the LED to show that the fan is stuck on
-void led_blink() {
-  while (true) {
-    // Only blink when we're in fan_override mode
-    if (fan_override) {
-      pwmWrite(GPIO_LED, 32);
-      usleep(150000);
-      pwmWrite(GPIO_LED, 0);
-      usleep(150000);
-    }
-    else {
-      usleep(300000);
-    }
-  }
-
-  return;
-}
-
-// Pulse the LED a few times before powering down
-int led_pulse() {
-  std::cout << "Pulsing the LED before powering off" << std::endl;
+// Pulse the LED a few times
+void led_pulse() {
+  std::cout << "Pulsing the LED" << std::endl;
 
   // Cycle it from off to on and back again, 3 times
   for (unsigned int pulse_number = 0; pulse_number < 3; ++pulse_number) {
@@ -138,28 +140,54 @@ int led_pulse() {
       pwmWrite(GPIO_LED, b);
       usleep(5000);
     }
-    usleep(300000);
+    usleep(500000);
     for (int b = 127; b > 0; --b) {
       pwmWrite(GPIO_LED, b);
       usleep(5000);
     }
   }
-
-  // Actually power off the system
-  std::cout << "Powering off" << std::endl;
-  sync();
-  const int val = reboot(LINUX_REBOOT_CMD_POWER_OFF);
-  if (val != 0) {
-    std::cout << "Error shutting down, returned " << val << std::endl;
-  }
-
-  // Blink the led in error
-  fan_override = true;
-
-  // Return
-  return val;
 }
 #endif // HAS_LED
+
+// Blink the LED to show that the fan is stuck on
+void led_blink() {
+
+  // Keep track of previous state
+  bool fan_override_previous = false;
+
+  // Run forever
+  while (true) {
+    // Only blink when we're in fan_override mode
+#ifdef HAS_LED
+    if (fan_override) {
+      pwmWrite(GPIO_LED, 32);
+      usleep(200000);
+      pwmWrite(GPIO_LED, 0);
+      usleep(200000);
+    }
+    else {
+      usleep(400000);
+    }
+#else // Internal LED
+    // Start blinking
+    if (fan_override && !fan_override_previous) {
+      sysfs_write(SYSFS_LED, "trigger", "timer");
+      sysfs_write(SYSFS_LED, "delay_on", "200");
+      sysfs_write(SYSFS_LED, "delay_off", "200");
+      fan_override_previous = fan_override;
+    }
+    else if (!fan_override && fan_override_previous) {
+      led_off();
+      fan_override_previous = fan_override;
+    }
+    else {
+      usleep(400000);
+    }
+#endif // HAS_LED
+  }
+
+  return;
+}
 
 #ifdef HAS_FAN
 // Power the fan on or off
@@ -168,6 +196,7 @@ void fan_power(bool on) {
   const int state = (on ? HIGH : LOW);
   digitalWrite(GPIO_FAN, state);
 }
+#endif // HAS_FAN
 
 // Turn the fan on or off based on CPU/GPU temperature
 void fan_control() {
@@ -175,8 +204,10 @@ void fan_control() {
   double T;
   bool fan_is_on = false;
 
+#ifdef HAS_FAN
   // Start with the fan off
   fan_power(fan_is_on);
+#endif // HAS_FAN
 
   // Read the CPU temperature only every 10 seconds
   while (true) {
@@ -190,6 +221,7 @@ void fan_control() {
       printf("The temperature is %6.3f C.\n", T);
       fclose(temperature_file);
 
+#ifdef HAS_FAN
       // Holding the button for 1 second will force the fan to be on
       if (!fan_override) {
         // Run the fan to cool >50C to < 45C
@@ -202,6 +234,7 @@ void fan_control() {
           fan_power(fan_is_on);
         }
       }
+#endif // HAS_FAN
     }
 
     // Sleep for a while
@@ -211,7 +244,6 @@ void fan_control() {
   // Return, though this should never happen
   return;
 }
-#endif // HAS_FAN
 
 // Debounce the button, and check to see how long it was held
 void button_action() {
@@ -242,20 +274,19 @@ void button_action() {
 #ifdef HAS_LED
           led_pulse();
 #endif // HAS_LED
+          power_off();
           button_held = false;
         }
+#ifdef HAS_FAN
         // At 2.4 seconds, turn off fan_override mode again
         else if (hold_intervals * DEBOUNCE_TIME == 2400) {
-          fan_override = !fan_override;
-#ifdef HAS_FAN
+          fan_override = false;
           fan_power(fan_override);
-#endif // HAS_FAN
         }
+#endif // HAS_FAN
         // At 1 second, switch between fan_override mode
         else if (hold_intervals * DEBOUNCE_TIME == 1000) {
-#ifdef HAS_LED
           led_off();
-#endif // HAS_LED
           fan_override = !fan_override;
 #ifdef HAS_FAN
           fan_power(fan_override);
