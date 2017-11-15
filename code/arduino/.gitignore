@@ -1,0 +1,6 @@
+# Ignore arduino hex files
+*.hex
+
+# Ignore other built folders for arduino
+.dep
+.lib
