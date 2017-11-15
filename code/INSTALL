@@ -4,3 +4,6 @@ $ cd ~/code
 $ git clone git://git.drogon.net/wiringPi
 $ cd wiringPi/
 $ ./build
+
+# For arduino loading via the command-line
+$ sudo apt install gcc-avr avr-libc avrdude arduino
