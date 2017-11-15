@@ -318,7 +318,7 @@ endif
 #_______________________________________________________________________________
 #                                                                          RULES
 
-.PHONY:	all target upload clean boards monitor size bootloader
+.PHONY:	all target upload fully-clean clean boards monitor size bootloader
 
 all: target
 
@@ -341,6 +341,9 @@ endif
 	$(AVRDUDE) $(AVRDUDEFLAGS) -U flash:w:$(TARGET).hex:i
 
 clean:
+	rm -f *.o *.elf *.hex *~
+
+fully-clean:
 	rm -f $(OBJECTS)
 	rm -f $(TARGET).elf $(TARGET).hex $(ARDUINOLIB) *~
 	rm -rf .lib .dep
