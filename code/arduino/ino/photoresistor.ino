@@ -1,7 +1,7 @@
 // Control some LEDs with a photoresistor
 
 // Calculated note frequencies
-#include "include/pitches.h"
+#include "ino/pitches.h"
 
 // Constants
 const int num_leds = 3; // 3 LEDS, R/G/B

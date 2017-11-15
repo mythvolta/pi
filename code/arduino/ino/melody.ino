@@ -1,4 +1,4 @@
-#include "include/pitches.h"
+#include "ino/pitches.h"
 
 const int PIN_SPEAKER = 5;
 
