@@ -36,7 +36,7 @@ void loop() {
     sprintf(buffer, "[%c] #%d (%d)", charIn, led_mode_num, brightness);
     Serial.println(buffer);
 
-    // Delay slightly
-    delay(100);
+    // Delay is not necessary since we are not blinking
+    //delay(100);
   }
 }
