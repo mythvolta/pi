@@ -1,7 +1,7 @@
 // Control some LEDs with a photoresistor
 
 // Calculated note frequencies
-#include "pitches.h"
+#include "include/pitches.h"
 
 // Constants
 const int num_leds = 3; // 3 LEDS, R/G/B
@@ -33,6 +33,9 @@ void setup() {
   for (int led_number = 0; led_number < num_leds; ++led_number) {
     pinMode(PIN_LEDS[led_number], OUTPUT);
   }
+
+  // Start playing the melody
+  melody_playing = true;
 }
 
 void loop() {
@@ -54,20 +57,17 @@ void loop() {
   // If all 3 are lit, buzz a buzzer
   // Generates a square wave of the frequency of 10000 Hz (and 50% duty cycle) on a pin 5 
   if (led_level >= 2) {
-    //pinMode(PIN_SPEAKER, OUTPUT);
-    //if (led_level >= 3) {
+    pinMode(PIN_SPEAKER, OUTPUT);
+    if (led_level >= 3) {
       if (!melody_playing) {
         melody_playing = true;
         play_melody();
       }
-    //}
+    }
     //else {
-    //  tone(PIN_SPEAKER, 10000); //, 200);
+    //  tone(PIN_SPEAKER, 10000, 200);
     //}
-    //pinMode(PIN_SPEAKER, INPUT);
-  }
-  else {
-    melody_playing = false;
+    pinMode(PIN_SPEAKER, INPUT);
   }
 }
 
