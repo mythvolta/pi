@@ -130,22 +130,21 @@ int led_cycle_brightness() {
   return 0;
 }
 
-// Pulse the LED a few times
+// Pulse the LED one time
 void led_pulse() {
   std::cout << "Pulsing the LED" << std::endl;
 
-  // Cycle it from off to on and back again, 3 times
-  for (unsigned int pulse_number = 0; pulse_number < 3; ++pulse_number) {
-    for (int b = 0; b < 128; ++b) {
-      pwmWrite(GPIO_LED, b);
-      usleep(5000);
-    }
-    usleep(500000);
-    for (int b = 127; b > 0; --b) {
-      pwmWrite(GPIO_LED, b);
-      usleep(5000);
-    }
+  // Cycle it from off to on and back again, then sleep for half a second
+  for (int b = 0; b < 128; ++b) {
+    pwmWrite(GPIO_LED, b);
+    usleep(5000);
   }
+  usleep(200000);
+  for (int b = 127; b > 0; --b) {
+    pwmWrite(GPIO_LED, b);
+    usleep(5000);
+  }
+  usleep(500000);
 }
 #endif // HAS_LED
 
@@ -225,9 +224,14 @@ void fan_control() {
       // Holding the button for 1 second will force the fan to be on
       if (!fan_override) {
         // Run the fan once the temperature hits 70C
-        if (!fan_is_on && T >= 70) {
-          fan_is_on = true;
-          fan_power(fan_is_on);
+        if (T >= 70) {
+          for (int pulse = 0; pulse < 3; ++pulse) {
+            led_pulse();
+          }
+          if (!fan_is_on) {
+            fan_is_on = true;
+            fan_power(fan_is_on);
+          }
         }
         // Stop the fan when we get down to 60C
         else if (fan_is_on && T < 60) {
@@ -279,10 +283,12 @@ void button_action() {
         if (digitalRead(GPIO_BTN)) {
           ++hold_intervals;
 
-          // At 3 seconds, pulse the LED, then exit
+          // At 3 seconds, pulse the LED a few times, then power off
           if (hold_intervals >= 30) {
 #ifdef HAS_LED
-            led_pulse();
+            for (int pulse = 0; pulse < 5; ++pulse) {
+              led_pulse();
+            }
 #endif // HAS_LED
             power_off();
             button_held = false;
