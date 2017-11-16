@@ -225,9 +225,7 @@ void fan_control() {
       if (!fan_override) {
         // Run the fan once the temperature hits 70C
         if (T >= 70) {
-          for (int pulse = 0; pulse < 3; ++pulse) {
-            led_pulse();
-          }
+          led_pulse();
           if (!fan_is_on) {
             fan_is_on = true;
             fan_power(fan_is_on);
@@ -286,7 +284,7 @@ void button_action() {
           // At 3 seconds, pulse the LED a few times, then power off
           if (hold_intervals >= 30) {
 #ifdef HAS_LED
-            for (int pulse = 0; pulse < 5; ++pulse) {
+            for (int pulse = 0; pulse < 3; ++pulse) {
               led_pulse();
             }
 #endif // HAS_LED
