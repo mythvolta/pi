@@ -11,5 +11,5 @@ for LINE in `lsof -c $SCRIPT -F p`; do
 done
 
 # Kill all old instances of gpio_button_led_fan before starting this one
-sudo pkill -9 -f gpio_button_led_fan
+sudo pkill -9 -f gpio_button_led_fan 2>/dev/null
 sudo $GPIO
