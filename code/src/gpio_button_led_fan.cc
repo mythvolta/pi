@@ -140,7 +140,7 @@ void led_pulse() {
     usleep(5000);
   }
   usleep(200000);
-  for (int b = 127; b > 0; --b) {
+  for (int b = 127; b >= 0; --b) {
     pwmWrite(GPIO_LED, b);
     usleep(5000);
   }
