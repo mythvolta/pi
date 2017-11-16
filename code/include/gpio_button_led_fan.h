@@ -20,7 +20,7 @@ const std::string ELEMENT_MAC = "bc:ae:c5:dc:5a:e2";  // For sodium (na)
 #define GPIO_BTN    27   // Button A is connected to GPIO27 (pin 13, WPi 2)
 //#define GPIO_BTN_B  22 // Button B is connected to GPIO22 (pin 15, WPi 3)
 #define GPIO_FAN    23   // The fan is connected to GPIO23 (pin 16, WPi 4)
-#define GPIO_IR     23   // The IR receiver is connected to GPIO25 (pin 18, WPi5)
+#define GPIO_IR     25   // The IR receiver is connected to GPIO25 (pin 18, WPi5)
 
 // Default to the internal LED if we have to
 #define SYSFS_LED   "/sys/class/leds/led0"
