@@ -218,18 +218,19 @@ void fan_control() {
     else {
       fscanf(temperature_file, "%lf", &T);
       T /= 1000;
-      printf("The temperature is %6.3f C.\n", T);
+      printf("The temperature is %02.2f C.\n", T);
       fclose(temperature_file);
 
 #ifdef HAS_FAN
       // Holding the button for 1 second will force the fan to be on
       if (!fan_override) {
-        // Run the fan to cool >50C to < 45C
-        if (!fan_is_on && T >= 50) {
+        // Run the fan once the temperature hits 70C
+        if (!fan_is_on && T >= 70) {
           fan_is_on = true;
           fan_power(fan_is_on);
         }
-        else if (fan_is_on && T < 45) {
+        // Stop the fan when we get down to 60C
+        else if (fan_is_on && T < 60) {
           fan_is_on = false;
           fan_power(fan_is_on);
         }
@@ -238,7 +239,7 @@ void fan_control() {
     }
 
     // Sleep for a while
-    sleep(60);
+    sleep(30);
   }
 
   // Return, though this should never happen
@@ -251,8 +252,8 @@ void button_action() {
   //  it is not within 100ms of the previous press
   static unsigned long time_previous = 0;
   const unsigned long time_current = millis();
-
-  if (time_current - time_previous > DEBOUNCE_TIME) {
+  const long time_delta = (time_current - time_previous);
+  if (time_delta > DEBOUNCE_TIME) {
     // Immediately cycle the brightness of the LED,
     //  unless the fan is stuck on
 #ifdef HAS_LED
@@ -261,46 +262,64 @@ void button_action() {
     }
 #endif // HAS_LED
 
-    // Check every 100 ms until it is no longer held
-    unsigned int hold_intervals = 0;
-    bool button_held = true;
-    while (button_held) {
-      usleep(DEBOUNCE_TIME * 1000);
-      if (digitalRead(GPIO_BTN)) {
-        ++hold_intervals;
+    // If this is a double click, reset brightness to 0
+    //  and call wake_element()
+    if (time_delta < 100) {
+      std::cout << "Button was double-pressed, time was " << time_delta << std::endl;
+      wake_element();
+      led_off();
+    }
+    // Normal press
+    else {
+      // Check every 100 ms until it is no longer held
+      unsigned int hold_intervals = 0;
+      bool button_held = true;
+      while (button_held) {
+        usleep(100000); // 100 ms
+        if (digitalRead(GPIO_BTN)) {
+          ++hold_intervals;
 
-        // At 3 seconds, pulse the LED, then exit
-        if (hold_intervals * DEBOUNCE_TIME >= 3000) {
+          // At 3 seconds, pulse the LED, then exit
+          if (hold_intervals >= 30) {
 #ifdef HAS_LED
-          led_pulse();
+            led_pulse();
 #endif // HAS_LED
-          power_off();
+            power_off();
+            button_held = false;
+          }
+#ifdef HAS_FAN
+          // At 2.4 seconds, turn off fan_override mode again
+          else if (hold_intervals == 24) {
+            fan_override = false;
+            fan_power(fan_override);
+          }
+#endif // HAS_FAN
+          // At 1 second, switch between fan_override mode
+          else if (hold_intervals == 10) {
+            led_off();
+            fan_override = !fan_override;
+#ifdef HAS_FAN
+            fan_power(fan_override);
+#endif // HAS_FAN
+          }
+        }
+        else {
           button_held = false;
         }
-#ifdef HAS_FAN
-        // At 2.4 seconds, turn off fan_override mode again
-        else if (hold_intervals * DEBOUNCE_TIME == 2400) {
-          fan_override = false;
-          fan_power(fan_override);
-        }
-#endif // HAS_FAN
-        // At 1 second, switch between fan_override mode
-        else if (hold_intervals * DEBOUNCE_TIME == 1000) {
-          led_off();
-          fan_override = !fan_override;
-#ifdef HAS_FAN
-          fan_power(fan_override);
-#endif // HAS_FAN
-        }
       }
-      else {
-        button_held = false;
-      }
+      std::cout << "Button was held for " << hold_intervals * 100 << " ms" << std::endl;
     }
-    std::cout << "Button was held for " << hold_intervals * DEBOUNCE_TIME << " ms" << std::endl;
+
+    // Update the old time and return
+    time_previous = millis();
   }
 
-  // Update the old time and return
-  time_previous = millis();
   return;
+}
+
+// Wake another machine via LAN
+void wake_element() {
+  const std::string command = "wakeonlan " + ELEMENT_MAC;
+  std::cout << command << std::endl;
+  std::system(command.c_str());
 }
