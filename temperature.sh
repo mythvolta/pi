@@ -1,5 +1,5 @@
 #!/bin/bash
-# Log the temperature to ~/nfs/log/*.log
+# Log the temperature to ~/camera/log/*.log
 
 # Calculate rough CPU and GPU temperatures
 if [[ -f "/sys/class/thermal/thermal_zone0/temp" ]]; then
