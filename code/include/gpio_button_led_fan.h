@@ -1,13 +1,18 @@
 // Perform a variety of functions on the raspberry pi 3
 
+#ifndef GPIO_BUTTON_LED_FAN_H
+#define GPIO_BUTTON_LED_FAN_H
+
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <string>
 #include <cstdlib>
 #include <unistd.h>
 #include <linux/reboot.h>
 #include <sys/reboot.h>
 #include <wiringPi.h>
+#include "log_date.h"
 
 // Easily disable the LED or the fan
 #define HAS_LED
@@ -63,3 +68,5 @@ void button_action();
 
 // Wake another machine via LAN
 void wake_element();
+
+#endif // GPIO_BUTTON_LED_FAN_H

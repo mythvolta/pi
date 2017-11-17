@@ -31,11 +31,11 @@ int main() {
   std::thread thread_fan(fan_control);
 
   // Join all the threads to exit
-  std::cout << "Waiting on both threads to exit" << std::endl;
+  std::cout << date_time() << "Waiting on both threads to exit" << std::endl;
   thread_led.join();
   thread_fan.join();
 
-  std::cout << "Finished, exiting from the main thread" << std::endl;
+  std::cout << date_time() << "Finished, exiting from the main thread" << std::endl;
   return 0;
 }
 
@@ -43,7 +43,7 @@ int main() {
 bool user_is_root() {
   if (geteuid() != 0)
   {
-    std::cout << "Error, must be root to execute." << std::endl;
+    std::cout << date_time() << "Error, must be root to execute." << std::endl;
     return false;
   }
   return true;
@@ -73,7 +73,7 @@ void gpio_setup() {
 // Write directly to the /sys/ filesystesm
 void sysfs_write(const std::string &path, const std::string &filename,
                  const std::string &value) {
-  std::cout << "Writing " << value << " to " << path << "/" << filename << std::endl;
+  std::cout << date_time() << "Writing " << value << " to " << path << "/" << filename << std::endl;
   std::ofstream fs;
   fs.open((path + "/" + filename).c_str());
   fs << value;
@@ -82,11 +82,11 @@ void sysfs_write(const std::string &path, const std::string &filename,
 
 // Actually power off the system
 int power_off() {
-  std::cout << "Powering off" << std::endl;
+  std::cout << date_time() << "Powering off" << std::endl;
   sync();
   const int val = reboot(LINUX_REBOOT_CMD_POWER_OFF);
   if (val != 0) {
-    std::cout << "Error shutting down, returned " << val << std::endl;
+    std::cout << date_time() << "Error shutting down, returned " << val << std::endl;
   }
 
   // Blink the led in error if we get this far
@@ -99,7 +99,7 @@ int power_off() {
 // Turn the LED off
 int led_off() {
   led_brightness = 0;
-  std::cout << "LED brightness reset to 0" << std::endl;
+  std::cout << date_time() << "LED brightness reset to 0" << std::endl;
 #ifdef HAS_LED
   pwmWrite(GPIO_LED, 0);
 #else // Internal LED
@@ -121,7 +121,7 @@ int led_cycle_brightness() {
   if (++led_brightness > 4) {
     led_brightness = 0;
   }
-  std::cout << "LED brightness cycled to #" << led_brightness
+  std::cout << date_time() << "LED brightness cycled to #" << led_brightness
     << " (" << brightness_modes[led_brightness] << ")" << std::endl;
 
   // Set the PWM mark from range [0, 128]
@@ -132,7 +132,7 @@ int led_cycle_brightness() {
 
 // Pulse the LED one time
 void led_pulse() {
-  std::cout << "Pulsing the LED" << std::endl;
+  std::cout << date_time() << "Pulsing the LED" << std::endl;
 
   // Cycle it from off to on and back again, then sleep for half a second
   for (int b = 0; b < 128; ++b) {
@@ -191,7 +191,7 @@ void led_blink() {
 #ifdef HAS_FAN
 // Power the fan on or off
 void fan_power(bool on) {
-  std::cout << "Turning fan " << (on ? "on" : "off") << std::endl;
+  std::cout << date_time() << "Turning fan " << (on ? "on" : "off") << std::endl;
   const int state = (on ? HIGH : LOW);
   digitalWrite(GPIO_FAN, state);
 }
@@ -212,13 +212,15 @@ void fan_control() {
   while (true) {
     temperature_file = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
     if (temperature_file == NULL) {
-      std::cout << "Failed to read temperature" << std::endl;
+      std::cout << date_time() << "Failed to read temperature" << std::endl;
     }
     else {
       fscanf(temperature_file, "%lf", &T);
-      T /= 1000;
-      printf("The temperature is %02.2f C.\n", T);
       fclose(temperature_file);
+      T /= 1000;
+      char temp_cstr[12];
+      sprintf(temp_cstr, "%02.2f", T);
+      std::cout << date_time << "The temperature is " << temp_cstr << " C" << std::endl;
 
 #ifdef HAS_FAN
       // Holding the button for 1 second will force the fan to be on
@@ -267,7 +269,7 @@ void button_action() {
     // If this is a double click, reset brightness to 0
     //  and call wake_element()
     if (time_delta < 100) {
-      std::cout << "Button was double-pressed, time was " << time_delta << std::endl;
+      std::cout << date_time() << "Button was double-pressed, time was " << time_delta << std::endl;
       wake_element();
       led_off();
     }
@@ -311,7 +313,7 @@ void button_action() {
           button_held = false;
         }
       }
-      std::cout << "Button was held for " << hold_intervals * 100 << " ms" << std::endl;
+      std::cout << date_time() << "Button was held for " << hold_intervals * 100 << " ms" << std::endl;
     }
 
     // Update the old time and return
@@ -324,6 +326,6 @@ void button_action() {
 // Wake another machine via LAN
 void wake_element() {
   const std::string command = "wakeonlan " + ELEMENT_MAC;
-  std::cout << command << std::endl;
+  std::cout << date_time() << command << std::endl;
   std::system(command.c_str());
 }
