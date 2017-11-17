@@ -9,10 +9,10 @@
 
 // Get the date and time
 std::string date_time() {
-  char buffer[16];
+  char buffer[32];
   auto t = std::time(nullptr);
   auto foo = *std::localtime(&t);
-  std::strftime(buffer, 16, "[%Y-%m-%d %H:%M:%S] ", &foo);
+  std::strftime(buffer, 32, "[%Y-%m-%d %H:%M:%S] ", &foo);
   return (std::string)buffer;
 }
 

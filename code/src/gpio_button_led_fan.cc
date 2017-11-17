@@ -218,9 +218,9 @@ void fan_control() {
       fscanf(temperature_file, "%lf", &T);
       fclose(temperature_file);
       T /= 1000;
-      char temp_cstr[12];
+      char temp_cstr[16];
       sprintf(temp_cstr, "%02.2f", T);
-      std::cout << date_time << "The temperature is " << temp_cstr << " C" << std::endl;
+      std::cout << date_time() << "The temperature is " << temp_cstr << " C" << std::endl;
 
 #ifdef HAS_FAN
       // Holding the button for 1 second will force the fan to be on
