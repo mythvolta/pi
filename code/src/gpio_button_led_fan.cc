@@ -30,7 +30,9 @@ int main() {
   std::thread thread_fan(fan_control);
 
   std::cout << date_time() << "Starting application by pulsing the LED" << std::endl;
+#ifdef HAS_LED
   led_pulse(5);
+#endif // HAS_LED
 
   // Join all the threads to exit
   thread_led.join();
@@ -241,7 +243,9 @@ void fan_control() {
             fan_is_on = true;
             fan_power(fan_is_on);
           }
+#ifdef HAS_LED
           led_pulse(2);
+#endif // HAS_LED
         }
         // Stop the fan when we get down to 60C
         else if (fan_is_on && T < 60) {
@@ -313,7 +317,9 @@ void button_action() {
           // At 1 second, pulse the led once and call wake_element()
           else if (hold_intervals == 10) {
             wake_element();
+#ifdef HAS_LED
             led_pulse(1);
+#endif // HAS_LED
           }
         }
         else {
