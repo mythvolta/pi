@@ -53,7 +53,7 @@ int power_off();
 int led_off();
 #ifdef HAS_LED
 int led_cycle_brightness();
-void led_pulse();
+void led_pulse(const unsigned int num_pulses);
 #endif // HAS_LED
 void led_blink();
 

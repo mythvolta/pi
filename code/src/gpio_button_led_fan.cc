@@ -24,14 +24,15 @@ int main() {
   uint16_t num_threads = 0;
 
   // Use a new thread to see if we should be blinking the LED
-  led_off();
   std::thread thread_led(led_blink);
 
   // Monitor temperature to control the fan in a new thread
   std::thread thread_fan(fan_control);
 
+  std::cout << date_time() << "Starting application by pulsing the LED" << std::endl;
+  led_pulse(5);
+
   // Join all the threads to exit
-  std::cout << date_time() << "Waiting on both threads to exit" << std::endl;
   thread_led.join();
   thread_fan.join();
 
@@ -131,20 +132,28 @@ int led_cycle_brightness() {
 }
 
 // Pulse the LED one time
-void led_pulse() {
-  std::cout << date_time() << "Pulsing the LED" << std::endl;
+void led_pulse(const unsigned int num_pulses) {
+  std::cout << date_time() << "Pulsing the LED " << num_pulses
+    << " time" << (num_pulses == 1 ? "" : "s") << std::endl;
 
-  // Cycle it from off to on and back again, then sleep for half a second
-  for (int b = 0; b < 128; ++b) {
-    pwmWrite(GPIO_LED, b);
-    usleep(5000);
+  // Run the alloted number of times
+  for (int pulse_num = 0; pulse_num <= num_pulses; ++pulse_num) {
+    // Cycle it from off to on and back again, then sleep for half a second
+    for (int b = 0; b < 128; ++b) {
+      pwmWrite(GPIO_LED, b);
+      usleep(5000);
+    }
+    usleep(100000);
+    for (int b = 127; b >= 0; --b) {
+      pwmWrite(GPIO_LED, b);
+      usleep(5000);
+    }
+ 
+    // Don't pause after the last pulse
+    if (pulse_num < num_pulses) {
+      usleep(200000);
+    }
   }
-  usleep(200000);
-  for (int b = 127; b >= 0; --b) {
-    pwmWrite(GPIO_LED, b);
-    usleep(5000);
-  }
-  usleep(500000);
 }
 #endif // HAS_LED
 
@@ -227,11 +236,12 @@ void fan_control() {
       if (!fan_override) {
         // Run the fan once the temperature hits 70C
         if (T >= 70) {
-          led_pulse();
+          // Pulse the fan twice every 30 seconds when the fan is on
           if (!fan_is_on) {
             fan_is_on = true;
             fan_power(fan_is_on);
           }
+          led_pulse(2);
         }
         // Stop the fan when we get down to 60C
         else if (fan_is_on && T < 60) {
@@ -266,12 +276,14 @@ void button_action() {
     }
 #endif // HAS_LED
 
-    // If this is a double click, reset brightness to 0
-    //  and call wake_element()
-    if (time_delta < 100) {
+    // A double click switches between fan_override mode
+    if (time_delta < 200) {
       std::cout << date_time() << "Button was double-pressed, time was " << time_delta << std::endl;
-      wake_element();
       led_off();
+      fan_override = !fan_override;
+#ifdef HAS_FAN
+      fan_power(fan_override);
+#endif // HAS_FAN
     }
     // Normal press
     else {
@@ -286,9 +298,7 @@ void button_action() {
           // At 3 seconds, pulse the LED a few times, then power off
           if (hold_intervals >= 30) {
 #ifdef HAS_LED
-            for (int pulse = 0; pulse < 3; ++pulse) {
-              led_pulse();
-            }
+            led_pulse(3);
 #endif // HAS_LED
             power_off();
             button_held = false;
@@ -300,13 +310,10 @@ void button_action() {
             fan_power(fan_override);
           }
 #endif // HAS_FAN
-          // At 1 second, switch between fan_override mode
+          // At 1 second, pulse the led once and call wake_element()
           else if (hold_intervals == 10) {
-            led_off();
-            fan_override = !fan_override;
-#ifdef HAS_FAN
-            fan_power(fan_override);
-#endif // HAS_FAN
+            wake_element();
+            led_pulse(1);
           }
         }
         else {
