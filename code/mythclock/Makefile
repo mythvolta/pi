@@ -1,7 +1,7 @@
 CFLAGS=-Wall -O3 -g
 CXXFLAGS=$(CFLAGS)
-OBJECTS=clock.o
-BINARIES=clock
+OBJECTS=mythclock.o
+BINARIES=mythclock
 
 # Where our library resides. You mostly only need to change the
 # RGB_LIB_DISTRIBUTION, this is where the library is checked out.
@@ -17,7 +17,7 @@ all : $(BINARIES)
 $(RGB_LIBRARY): FORCE
 	$(MAKE) -C $(RGB_LIBDIR)
 
-clock : clock.o
+mythclock : mythclock.o
 
 # All the binaries that have the same name as the object file.q
 % : %.o $(RGB_LIBRARY)
