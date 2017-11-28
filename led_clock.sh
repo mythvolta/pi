@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run the clock on the LED matrix
-P="~pi/toolbox/code/mythclock"
+P="/home/pi/toolbox/code/mythclock"
 
 # Ensure that only one version of this script runs
 SCRIPT=`basename $0`
