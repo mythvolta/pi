@@ -142,12 +142,12 @@ int main(int argc, char *argv[]) {
             old_hour = tm.tm_hour;
           }
 
-          // Check for files every ten minutes
-          if (tm.tm_min % 10 == 0) {
+          // Check for files every half hour
+          if (tm.tm_min % 30 == 0) {
             printf("[%02d:%02d:%02d] : ", tm.tm_hour, tm.tm_min, tm.tm_sec);
             if (check_for_file(text_string)) {
               std::cout << "Clock mode disabled, text is (" << text_string << ")" << std::endl;
-              next_time.tv_sec += 1;
+              //next_time.tv_sec += 1;
               font_color = rgb_matrix::Color(font_intensity, 0, font_intensity);
               text_string_start = 0;
               font.LoadFont(font_small.c_str());
@@ -250,6 +250,12 @@ bool check_for_file(std::string &s) {
 
   // Close the file and delte it
   fin.close();
-  std::remove(status_filename.c_str());
+  if (remove(status_filename.c_str()) != 0) {
+    std::cout << "Failed to remove " << status_filename << std::endl;
+  }
+  else {
+    std::cout << "Successfully removed " << status_filename << std::endl;
+  }
+
   return true;
 }

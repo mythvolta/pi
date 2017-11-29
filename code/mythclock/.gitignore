@@ -1,3 +1,6 @@
 # Ignore binaries
 clock
 mythclock
+
+# Ignore status file
+mythclock.status
