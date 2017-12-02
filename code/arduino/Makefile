@@ -8,6 +8,9 @@ ARDUINODIR := /usr/share/arduino
 #SERIALDEV  := /dev/ttyUSB0
 SERIALDEV  := /dev/ttyACM0
 
+# Add ino/ as in include directory
+CPPFLAGS += -Iino -I$(ARDUINODIR)/libraries/Wire
+
 # Actually use arduino.mk
 include ./arduino.mk
 
