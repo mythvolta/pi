@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Simple wrapper script to control MPD
+
+# Get the codes, stored in variable $MPC
+source codes.bash
+MPC_STAT="$MPC -f [%position%] %albumartist% - %album% - %title%"
+
+HELP="Arguments are:\n
+  play         : Play the current playlist (default)\n
+  pause        : Pause the song if playing\n
+  toggle       : Switch between play and pause\n
+  list         : Show the current playlist\n
+  volume_down  : Turn down the volume by 2%\n
+  volume_up    : Turn up the volume by 2%\n
+  volume_max   : Set the volume to max 100%\n
+  random       : Play a random album\n
+  shuffle      : Shuffle the current playlist\n
+  favorite     : Play a favorite album"
+
+# Only allow a single argument
+ARG=""
+if [[ $# > 1 ]]
+then
+  echo -e $HELP
+  exit 2
+elif [[ $# == 1 ]]
+then
+  ARG=$1
+fi
+
+echo "Argument is [$ARG]"
+
+# Check the command
+if [[ $ARG == "" || $ARG == "play" ]]
+then
+  CMD="$MPC play"
+elif [[ $ARG == "pause" ]]
+then
+  CMD="$MPC pause"
+elif [[ $ARG == "toggle" ]]
+then
+  CMD="$MPC toggle"
+elif [[ $ARG == "list" ]]
+then
+  CMD="$MPC playlist; $MPC_STAT"
+elif [[ $ARG == "volume_down" ]]
+then
+  CMD="$MPC volume -2"
+elif [[ $ARG == "volume_up" ]]
+then
+  CMD="$MPC volume +2"
+elif [[ $ARG == "volume_max" ]]
+then
+  CMD="$MPC volume 100"
+elif [[ $ARG == "random" ]]
+then
+  CMD="ALBUM=`$MPC list album | sort -R | head`; $MPC findadd album \"\$ALBUM\""
+else
+  echo -e $HELP
+  exit 2
+fi
+
+# Actually run the command
+echo "Command is [$CMD]";
+$CMD
+exit $?

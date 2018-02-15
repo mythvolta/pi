@@ -1,0 +1,22 @@
+# Auto-completion for play script
+
+# Needs to be linked thus:
+# sudo ln -s ~/toolbox/play.autocomplete /etc/bash_completion.d/play
+
+# Run this command to update bash
+#complete -F _play play
+
+_play()
+{
+    # Variable to hold the current word
+    COMPREPLY=()
+    local cur
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    # Build a list of our keywords for auto-completion
+    local tags="one three five";
+
+    # Generate possible matches and store them in the 
+    #  array variable COMPREPLY
+    COMPREPLY=($(compgen -W "${tags}" $cur))
+}
