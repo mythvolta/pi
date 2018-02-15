@@ -14,7 +14,7 @@ _play()
     cur="${COMP_WORDS[COMP_CWORD]}"
 
     # Build a list of our keywords for auto-completion
-    local tags="one three five";
+    local tags="play pause toggle list volume_down volume_up volume_max random shuffle favorite";
 
     # Generate possible matches and store them in the 
     #  array variable COMPREPLY

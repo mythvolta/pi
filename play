@@ -4,7 +4,8 @@
 
 # Get the codes, stored in variable $MPC
 source codes.bash
-MPC_STAT="$MPC -f [%position%] %albumartist% - %album% - %title%"
+#OPTIONS="[%position%] %albumartist% - %title%"
+OPTIONS="[%position%] %artist% - %title%"
 
 HELP="Arguments are:\n
   play         : Play the current playlist (default)\n
@@ -29,39 +30,61 @@ then
   ARG=$1
 fi
 
-echo "Argument is [$ARG]"
-
 # Check the command
 if [[ $ARG == "" || $ARG == "play" ]]
 then
-  CMD="$MPC play"
+  $MPC play
 elif [[ $ARG == "pause" ]]
 then
-  CMD="$MPC pause"
+  $MPC pause
 elif [[ $ARG == "toggle" ]]
 then
-  CMD="$MPC toggle"
+  $MPC toggle
 elif [[ $ARG == "list" ]]
 then
-  CMD="$MPC playlist; $MPC_STAT"
+  $MPC
 elif [[ $ARG == "volume_down" ]]
 then
-  CMD="$MPC volume -2"
+  $MPC volume -2
 elif [[ $ARG == "volume_up" ]]
 then
-  CMD="$MPC volume +2"
+  $MPC volume +2
 elif [[ $ARG == "volume_max" ]]
 then
-  CMD="$MPC volume 100"
+  $MPC volume 100
 elif [[ $ARG == "random" ]]
 then
-  CMD="ALBUM=`$MPC list album | sort -R | head`; $MPC findadd album \"\$ALBUM\""
+  ALBUM=`$MPC list album | sort -R | head -n1`
+  if [[ $ALBUM != "" ]]
+  then
+    echo -e "[$ALBUM]\n"
+    $MPC clear -q
+    $MPC findadd album "$ALBUM"
+  else
+    echo "Failed to find album."
+  fi
+elif [[ $ARG == "shuffle" ]]
+then
+  $MPC shuffle
+elif [[ $ARG == "favorite" ]]
+then
+  FAVORITES="Absolution|Blue Sky Noise|Burst and Bloom EP|Carnavas|Commit This To Memory|Days of the New|Deja Entendu|Good Apollo I'm Burning Star IV, Volume One|I Am the Movie|IX|In Keeping Secrets of Silent Earth: 3|Juturna|Keep It Like a Secret|Lateralus|Make Up the Breakdown|Morning View|Now Here Is Nowhere|On Letting Go|Pinkerton|Satori|Separation|Source Tags|Songs for the Deaf|Swoon|The Color Before the Sun|The Colour and the Shape|The Devil and God Are Raging Inside Me|The Things We Think We're Missing|The Ugly Organ|There's Nothing Wrong With Love|Turn On the Bright Lights|Wiretap Scars"
+  ALBUM=`$MPC list album | egrep "$FAVORITES" | sort -R | head -n1`
+  if [[ $ALBUM != "" ]]
+  then
+    echo -e "[$ALBUM]\n"
+    $MPC clear -q
+    $MPC findadd album "$ALBUM"
+  else
+    echo "Failed to find album."
+  fi
 else
   echo -e $HELP
   exit 2
 fi
 
-# Actually run the command
-echo "Command is [$CMD]";
-$CMD
+# Run a few more commands
+$MPC -f "$OPTIONS" playlist
+echo
+$MPC
 exit $?
