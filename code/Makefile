@@ -5,7 +5,7 @@ SRCDIR     := src
 INCDIR     := include
 BINDIR     := bin
 CFLAGS     := -O2 -g
-CPPFLAGS   := -std=c++14 -I$(INCDIR)
+CPPFLAGS   := -std=c++17 -I$(INCDIR)
 LDFLAGS    := -lwiringPi -lpthread
 RM         := rm -f
 BIN        := $(BINDIR)/gpio_button_led_fan
