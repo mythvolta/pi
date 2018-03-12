@@ -28,6 +28,7 @@ int main() {
 
   // Monitor temperature to control the fan in a new thread
   std::thread thread_fan(fan_control);
+  usleep(100);
 
   std::cout << date_time() << "Starting application by pulsing the LED" << std::endl;
 #ifdef HAS_LED
@@ -237,7 +238,7 @@ void fan_control() {
       // Holding the button for 1 second will force the fan to be on
       if (!fan_override) {
         // Run the fan once the temperature hits 70C
-        if (T >= 70) {
+        if (T >= 80) {
           // Pulse the fan twice every 30 seconds when the fan is on
           if (!fan_is_on) {
             fan_is_on = true;
