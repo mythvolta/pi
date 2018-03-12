@@ -4,8 +4,8 @@ GPIO=~pi/toolbox/code/bin/gpio_button_led_fan
 
 # Ensure that only one version of this script runs
 SCRIPT=`basename $0`
-for LINE in `lsof -c $SCRIPT -F p`; do 
-  if [ $$ -gt ${LINE#?} ] ; then
+for PID in `pgrep $SCRIPT`; do
+  if [[ $$ -ne $PID ]] ; then
     exit 0
   fi
 done
