@@ -10,3 +10,6 @@ a.out
 
 # Ignore binaries
 bin/
+
+# Ignore the wiringPi/ subdirectory
+wiringPi/
