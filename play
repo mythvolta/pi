@@ -10,6 +10,8 @@ OPTIONS="[%position%] %artist% - %title%"
 HELP="Arguments are:\n
   play         : Play the current playlist (default)\n
   pause        : Pause the song if playing\n
+  next         : Go to the next song\n
+  prev         : Go to the previous song\n
   toggle       : Switch between play and pause\n
   list         : Show the current playlist\n
   volume_down  : Turn down the volume by 2%\n
@@ -37,6 +39,12 @@ then
 elif [[ $ARG == "pause" ]]
 then
   $MPC pause
+elif [[ $ARG == "next" ]]
+then
+  $MPC next
+elif [[ $ARG == "prev" ]]
+then
+  $MPC prev
 elif [[ $ARG == "toggle" ]]
 then
   $MPC toggle
