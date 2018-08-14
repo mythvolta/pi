@@ -1,4 +1,8 @@
 // Perform a variety of functions on the raspberry pi 3
+// Commands:
+//   Single click: toggle led
+//   Double click: start/stop fan
+//   Long press:   power off
 
 #include "gpio_button_led_fan.h"
 
@@ -26,11 +30,12 @@ int main() {
   // Use a new thread to see if we should be blinking the LED
   std::thread thread_led(led_blink);
 
-  // Monitor temperature to control the fan in a new thread
-  std::thread thread_fan(fan_control);
+  std::cout << date_time() << "Starting application by pulsing the LED" << std::endl;
   usleep(100);
 
-  std::cout << date_time() << "Starting application by pulsing the LED" << std::endl;
+  // Monitor temperature to control the fan in a new thread
+  std::thread thread_fan(fan_control);
+
 #ifdef HAS_LED
   led_pulse(5);
 #endif // HAS_LED
@@ -134,13 +139,13 @@ int led_cycle_brightness() {
   return 0;
 }
 
-// Pulse the LED one time
+// Pulse the LED a number of times
 void led_pulse(const unsigned int num_pulses) {
   std::cout << date_time() << "Pulsing the LED " << num_pulses
     << " time" << (num_pulses == 1 ? "" : "s") << std::endl;
 
   // Run the alloted number of times
-  for (int pulse_num = 0; pulse_num <= num_pulses; ++pulse_num) {
+  for (int pulse_num = 1; pulse_num <= num_pulses; ++pulse_num) {
     // Cycle it from off to on and back again, then sleep for half a second
     for (int b = 0; b < 128; ++b) {
       pwmWrite(GPIO_LED, b);
@@ -234,15 +239,16 @@ void fan_control() {
       sprintf(temp_cstr, "%02.2f", T);
       std::cout << date_time() << "The temperature is " << temp_cstr << " C" << std::endl;
 
-#ifdef HAS_FAN
       // Holding the button for 1 second will force the fan to be on
       if (!fan_override) {
         // Run the fan once the temperature hits 70C
-        if (T >= 80) {
+        if (T >= 70) {
           // Pulse the fan twice every 30 seconds when the fan is on
           if (!fan_is_on) {
             fan_is_on = true;
+#ifdef HAS_FAN
             fan_power(fan_is_on);
+#endif // HAS_FAN
           }
 #ifdef HAS_LED
           led_pulse(2);
@@ -251,10 +257,11 @@ void fan_control() {
         // Stop the fan when we get down to 60C
         else if (fan_is_on && T < 60) {
           fan_is_on = false;
+#ifdef HAS_FAN
           fan_power(fan_is_on);
+#endif // HAS_FAN
         }
       }
-#endif // HAS_FAN
     }
 
     // Sleep for a while
@@ -308,6 +315,7 @@ void button_action() {
             power_off();
             button_held = false;
           }
+	  /*
 #ifdef HAS_FAN
           // At 2.4 seconds, turn off fan_override mode again
           else if (hold_intervals == 24) {
@@ -322,6 +330,7 @@ void button_action() {
             led_pulse(1);
 #endif // HAS_LED
           }
+	  */
         }
         else {
           button_held = false;
