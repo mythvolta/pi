@@ -36,9 +36,9 @@ int main() {
   // Monitor temperature to control the fan in a new thread
   std::thread thread_fan(fan_control);
 
-#ifdef HAS_LED
+#ifdef HAS_LED1
   led_pulse(5);
-#endif // HAS_LED
+#endif // HAS_LED1
 
   // Join all the threads to exit
   thread_led.join();
@@ -71,9 +71,12 @@ void gpio_setup() {
 
   // Set up all the pins
   pinMode(GPIO_BTN, INPUT);
-#ifdef HAS_LED
-  pinMode(GPIO_LED, PWM_OUTPUT);
-#endif // HAS_LED
+#ifdef HAS_LED1
+  pinMode(GPIO_LED1, PWM_OUTPUT);
+#endif // HAS_LED1
+#ifdef HAS_LED2
+  pinMode(GPIO_LED2, PWM_OUTPUT);
+#endif // HAS_LED2
 #ifdef HAS_FAN
   pinMode(GPIO_FAN, OUTPUT);
 #endif // HAS_FAN
@@ -109,15 +112,15 @@ int power_off() {
 int led_off() {
   led_brightness = 0;
   std::cout << date_time() << "LED brightness reset to 0" << std::endl;
-#ifdef HAS_LED
-  pwmWrite(GPIO_LED, 0);
+#ifdef HAS_LED1
+  pwmWrite(GPIO_LED1, 0);
 #else // Internal LED
   sysfs_write(SYSFS_LED, "trigger", "none");
   sysfs_write(SYSFS_LED, "brightness", "0");
-#endif // HAS_LED
+#endif // HAS_LED1
 }
 
-#ifdef HAS_LED
+#ifdef HAS_LED1
 // Change the LED brightness between 5 possibilities
 // Off, 25%, 50%, 75%, and full on
 int led_cycle_brightness() {
@@ -134,7 +137,7 @@ int led_cycle_brightness() {
     << " (" << brightness_modes[led_brightness] << ")" << std::endl;
 
   // Set the PWM mark from range [0, 128]
-  pwmWrite(GPIO_LED, brightness_modes[led_brightness]);
+  pwmWrite(GPIO_LED1, brightness_modes[led_brightness]);
 
   return 0;
 }
@@ -148,12 +151,12 @@ void led_pulse(const unsigned int num_pulses) {
   for (int pulse_num = 1; pulse_num <= num_pulses; ++pulse_num) {
     // Cycle it from off to on and back again, then sleep for half a second
     for (int b = 0; b < 128; ++b) {
-      pwmWrite(GPIO_LED, b);
+      pwmWrite(GPIO_LED1, b);
       usleep(5000);
     }
     usleep(100000);
     for (int b = 127; b >= 0; --b) {
-      pwmWrite(GPIO_LED, b);
+      pwmWrite(GPIO_LED1, b);
       usleep(5000);
     }
  
@@ -163,7 +166,7 @@ void led_pulse(const unsigned int num_pulses) {
     }
   }
 }
-#endif // HAS_LED
+#endif // HAS_LED1
 
 // Blink the LED to show that the fan is stuck on
 void led_blink() {
@@ -174,11 +177,11 @@ void led_blink() {
   // Run forever
   while (true) {
     // Only blink when we're in fan_override mode
-#ifdef HAS_LED
+#ifdef HAS_LED1
     if (fan_override) {
-      pwmWrite(GPIO_LED, 32);
+      pwmWrite(GPIO_LED1, 32);
       usleep(200000);
-      pwmWrite(GPIO_LED, 0);
+      pwmWrite(GPIO_LED1, 0);
       usleep(200000);
     }
     else {
@@ -199,7 +202,7 @@ void led_blink() {
     else {
       usleep(400000);
     }
-#endif // HAS_LED
+#endif // HAS_LED1
   }
 
   return;
@@ -241,8 +244,8 @@ void fan_control() {
 
       // Holding the button for 1 second will force the fan to be on
       if (!fan_override) {
-        // Run the fan once the temperature hits 70C
-        if (T >= 70) {
+        // Run the fan once the temperature hits 65C
+        if (T >= 65) {
           // Pulse the fan twice every 30 seconds when the fan is on
           if (!fan_is_on) {
             fan_is_on = true;
@@ -250,9 +253,9 @@ void fan_control() {
             fan_power(fan_is_on);
 #endif // HAS_FAN
           }
-#ifdef HAS_LED
+#ifdef HAS_LED1
           led_pulse(2);
-#endif // HAS_LED
+#endif // HAS_LED1
         }
         // Stop the fan when we get down to 60C
         else if (fan_is_on && T < 60) {
@@ -282,11 +285,11 @@ void button_action() {
   if (time_delta > DEBOUNCE_TIME) {
     // Immediately cycle the brightness of the LED,
     //  unless the fan is stuck on
-#ifdef HAS_LED
+#ifdef HAS_LED1
     if (!fan_override) {
       led_cycle_brightness();
     }
-#endif // HAS_LED
+#endif // HAS_LED1
 
     // A double click switches between fan_override mode
     if (time_delta < 200) {
@@ -309,28 +312,12 @@ void button_action() {
 
           // At 3 seconds, pulse the LED a few times, then power off
           if (hold_intervals >= 30) {
-#ifdef HAS_LED
+#ifdef HAS_LED1
             led_pulse(3);
-#endif // HAS_LED
+#endif // HAS_LED1
             power_off();
             button_held = false;
           }
-	  /*
-#ifdef HAS_FAN
-          // At 2.4 seconds, turn off fan_override mode again
-          else if (hold_intervals == 24) {
-            fan_override = false;
-            fan_power(fan_override);
-          }
-#endif // HAS_FAN
-          // At 1 second, pulse the led once and call wake_element()
-          else if (hold_intervals == 10) {
-            wake_element();
-#ifdef HAS_LED
-            led_pulse(1);
-#endif // HAS_LED
-          }
-	  */
         }
         else {
           button_held = false;
