@@ -9,9 +9,9 @@ uname -a | head
 echo
 lsb_release -a
 echo
-echo "sudo apt-get -y autoremove"
-echo "sudo apt-get -y autoclean"
-echo "sudo apt-get -y clean"
+echo "sudo apt -y autoremove"
+echo "sudo apt -y autoclean"
+echo "sudo apt -y clean"
 echo
 SSH=~/.ssh/authorized_keys
 echo ${SSH}:
