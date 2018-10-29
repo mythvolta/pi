@@ -11,8 +11,7 @@ sep = 'EJR22'
 mpc = 'mpc -h dragon'
 parts = '%%albumartist%% %s %%date%% %%album%% %s (%%track%%) %%title%%' % (sep, sep)
 is_playing = re.compile('^\[play')
-#album_year = re.compile('^(?P=<year>[0-9]+)(-\d{2})?(-\d{2})? (?P=<album>.*)')
-album_year = re.compile('^(\d\d\d\d)?(-\d{2})?(-\d\d)? (.*)')
+album_year = re.compile('^(\d{4})?(-\d{2})?(-\d{2})? (.*)')
 extra_prefix = re.compile('^ - ')
 
 # Use object-oriented python
@@ -32,18 +31,14 @@ class Track:
   def split_track_info(self, s):
     parts = s.split(' %s ' % sep)
     num_parts = len(parts)
-    #print('(%s) has %d parts' % (s, num_parts))
 
     # First part is always the album artist
     if (num_parts >= 1):
       self.artist = parts[0]
-      #print('Artist = (%s)' % parts[0])
     # if
-    #print('Artist is really %s' % self.artist)
 
     # Second part is the album year and album title   
     if (num_parts >= 2):
-      #print('Album = (%s)' % parts[1])
       result = album_year.match(parts[1])
       if (result):
         num_groups = len(result.groups())
@@ -55,14 +50,11 @@ class Track:
         # if
       # if
     # if
-    #print('Album is really [%04d] %s' % (self.year, self.album))
 
     # Third part is always the track title
     if (num_parts >= 3):
       self.title = parts[2]
-      #print('Track = (%s)' % parts[2])
     # if
-    #print('Track is really %s' % self.title)
   # def split_track_info()
 
   '''Overloaded output operator'''
@@ -70,7 +62,6 @@ class Track:
     return '%s - [%04d] %s - %s' % (self.artist, self.year, self.album, self.title)
   # def __str__
 # class
-
 
 # Run the mpc command
 encoding = 'utf-8'
@@ -85,7 +76,6 @@ def run_mpc(cmd):
 
 # Compare two tracks, and return only the differences
 def compare_tracks(track_new, track_old):
-  #print('comparing tracks (%s) and (%s)' % (track_new, track_old))
   out = ''
   different = False
 
@@ -116,26 +106,22 @@ def compare_tracks(track_new, track_old):
 # The sleep timer defaults to 10 seconds,
 #  but resets to 60 once playback is stopped
 sleep_time = 10
-previous_track = ''
+track_previous = Track
 while True:
   # Check the status
   (output, err) = run_mpc(status)
   playing = False
   if is_playing.match(output.decode(encoding)):
     playing = True
-  else:
-    print(str(output))
   # if
 
   # Always loop 6 times, and either read track info or do nothing
-  track_previous = Track
   for i in range(1, 6):
     # Normal mode
     if playing:
       (output, err) = run_mpc(track)
       track_current = Track(output.decode(encoding).rstrip())
       s = compare_tracks(track_current, track_previous)
-      #print('\n\n[%d]: %s\n\n' % (i, s))
       if (s):
         print(s)
       # if
