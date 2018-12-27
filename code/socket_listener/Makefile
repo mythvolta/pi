@@ -6,8 +6,7 @@ CC         := gcc $(STD)
 CXX        := g++ $(STD)
 WARN       := -Wall -Wextra -Wfatal-errors
 CFLAGS     := -fPIC $(WARN) -O2 -g
-#RM         := rm -f
-RM         := ls -Alh
+RM         := rm
 
 # Define the binaries
 SRC_FILES := socket_listener.cpp
@@ -16,9 +15,6 @@ BIN_FILES := $(patsubst %.cpp,%,$(SRC_FILES))
 
 .PHONY: all 
 all: $(BIN_FILES)
-	echo SRC_FILES=$(SRC_FILES)
-	echo OBJ_FILES=$(OBJ_FILES)
-	echo BIN_FILES=$(BIN_FILES)
 
 .PHONY: clean
 clean:
