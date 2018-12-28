@@ -48,9 +48,13 @@ MythClock::MythClock() :
   time_initial = time(NULL);
   next_time.tv_sec = time_initial;
   next_time.tv_nsec = 0;
+
   // Load font
   font.LoadFont(font_large.c_str());
   outline_font = font.CreateOutlineFont();
+ 
+  // Set the inital message
+  setMessage("mythclock");
 
   // Signal handlers
   signal(SIGTERM, InterruptHandler);
@@ -135,7 +139,7 @@ void MythClock::changeClockPosition() {
   }
   
   printf("[%02d:%02d:%02d] i=%d o=%d @ (%d, %d)\n", tm.tm_hour, tm.tm_min, tm.tm_sec,
-  font_intensity, with_outline, x_offset, y_offset);
+    font_intensity, with_outline, x_offset, y_offset);
 }
 
 // Set a message to display
@@ -191,6 +195,9 @@ void MythClock::showMessage() {
       std::cout << "Text buffer[" << text_string_start << "] = (" << text_buffer << ")" << std::endl;
       text_offset = 0;
     }
+    getNewTime();
+    printf("[%02d:%02d:%02d] : ", tm.tm_hour, tm.tm_min, tm.tm_sec);
+    cout << "Done updating\n";
   }
 }
 
