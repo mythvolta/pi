@@ -7,6 +7,7 @@
 
 #include "led-matrix.h"
 #include "graphics.h"
+#include "socket_listener.h"
 
 #include <iostream>
 #include <fstream>
@@ -19,12 +20,17 @@
 #include <time.h>
 #include <unistd.h>
 
+using namespace std;
+
 // Global constants for the paths
 const static std::string matrix_path = "/home/pi/code/rpi-rgb-led-matrix";
 const static std::string status_filename = "/home/pi/toolbox/code/mythclock/mythclock.status";
 
 // Function to read the status file, if it exists
 bool check_for_file(std::string &s);
+
+// Actually listen in a new thread
+void spawnThread(SocketListener* sock);
 
 // Set the color intensity at every hour
 const int intensity_hour[24] = {24, 24, 24, 24, 24, 24, 32, 36, 40, 48, 64, 96, 128, 128, 128, 128, 96, 64, 48, 36, 32, 24, 24, 24};
@@ -102,8 +108,15 @@ int main(int argc, char *argv[]) {
   unsigned int text_string_start = 0;
   int text_offset = -32;
   bool show_clock = false;
+  
+  cout << "Creating a SocketListener, PID=" << getpid() << "\n";
+  auto sock = make_unique<SocketListener>(1234);
+
+  cout << "Listening for UDP message in a new thread\n";
+  thread t(spawnThread, sock.get());
 
   // Loop forever
+  string s;
   while (!interrupt_received) {
     // Get the time
     localtime_r(&next_time.tv_sec, &tm);
@@ -114,6 +127,19 @@ int main(int argc, char *argv[]) {
 
       // Handle changes of second
       if (tm.tm_sec != old_sec) {
+        if (sock->isMessage()) {
+          do {
+            s = sock->getMessage();
+            cout << " : [" << s << "]\n";
+            if (s == "exit") {
+              running = false;
+              break;
+            }
+          } while (sock->isMessage());
+        }
+        else {
+          cout << "No new messages\n";
+        }
           
         // Handle changes of minute
         if (tm.tm_min != old_min) {
@@ -230,6 +256,9 @@ int main(int argc, char *argv[]) {
   // Finished. Shut down the RGB matrix.
   matrix->Clear();
   delete matrix;
+  
+  cout << "Terminating thread\n";
+  t.detach();
 
   // Create a fresh new line after ^C on screen
   write(STDOUT_FILENO, "\n", 1);
@@ -259,3 +288,11 @@ bool check_for_file(std::string &s) {
 
   return true;
 }
+
+// Actually listen in a new thread
+void spawnThread(SocketListener* sock) {
+  sock->listen();
+}
+
+// Main function
+int main() {

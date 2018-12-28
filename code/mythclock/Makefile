@@ -1,6 +1,14 @@
-CFLAGS=-Wall -O3 -g
-CXXFLAGS=$(CFLAGS)
-OBJECTS=mythclock.o
+
+# Completely build the socket listener
+
+# Global variables
+STD        := -lstdc++ -std=c++14 -pthread
+CC         := gcc $(STD)
+CXX        := g++ $(STD)
+WARN       := -Wall -Wextra -Wfatal-errors
+CFLAGS     := -fPIC $(WARN) -O1 -g
+RM         := rm
+
 BINARIES=mythclock
 
 # Where our library resides. You mostly only need to change the
@@ -17,23 +25,24 @@ all : $(BINARIES)
 $(RGB_LIBRARY): FORCE
 	$(MAKE) -C $(RGB_LIBDIR)
 
-mythclock : mythclock.o
+mythclock : $(RGB_LIBRARY) mythclock.o socket_listener.o
 
-# All the binaries that have the same name as the object file.q
-% : %.o $(RGB_LIBRARY)
+# All the binaries that have the same name as the object file
+% : %.o
 	$(CXX) $< -o $@ $(LDFLAGS)
+	$(CXX) $(CFLAGS) -o $@ $^
 
 # Since the C example uses the C++ library underneath, which depends on C++
 # runtime stuff, you still have to also link -lstdc++
 
 %.o : %.cc
-	$(CXX) -I$(RGB_INCDIR) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) -I$(RGB_INCDIR) $(CFLAGS) -c -o $@ $<
 
 %.o : %.c
 	$(CC) -I$(RGB_INCDIR) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(OBJECTS) $(BINARIES)
+	rm -f *.o $(BINARIES)
 
 FORCE:
 .PHONY: FORCE
