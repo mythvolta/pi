@@ -137,9 +137,11 @@ bool SocketListener::addMessage(char buf[], int len) {
   cout << s.size() << " : " << s << "\n";
 
   // Check for exit condition
+  /*
   if (s == "exit") {
     return false;
   }
+  */
 
   // Lock the queue while we're adding to it
   lock_guard<mutex> lk(messageQueueLock);
