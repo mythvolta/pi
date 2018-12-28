@@ -6,7 +6,7 @@ STD        := -lstdc++ -std=c++14 -pthread
 CC         := gcc $(STD)
 CXX        := g++ $(STD)
 WARN       := -Wall -Wextra -Wfatal-errors -Wno-unused-parameter
-CFLAGS     := -fPIC $(WARN) -O1 -g
+CFLAGS     := -fPIC $(WARN) -O3 -g
 RM         := rm -f
 
 # Binaries to build
