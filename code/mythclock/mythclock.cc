@@ -130,14 +130,15 @@ int main(int argc, char *argv[]) {
       // Handle changes of second
       if (tm.tm_sec != old_sec) {
         if (sock->isMessage()) {
+          text_string = sock->getMessage();
+          show_clock = false;
+          /*
           do {
             cout << " : [" << sock->getMessage() << "]\n";
           } while (sock->isMessage());
+          */
         }
-        else {
-          cout << "No new messages\n";
-        }
-          
+
         // Handle changes of minute
         if (tm.tm_min != old_min) {
           // Handle changes of hour
