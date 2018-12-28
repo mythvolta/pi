@@ -9,8 +9,11 @@
 #include "graphics.h"
 #include "socket_listener.h"
 
+#include <chrono>
 #include <iostream>
 #include <fstream>
+#include <memory>
+#include <thread>
 
 #include <getopt.h>
 #include <signal.h>
@@ -116,7 +119,6 @@ int main(int argc, char *argv[]) {
   thread t(spawnThread, sock.get());
 
   // Loop forever
-  string s;
   while (!interrupt_received) {
     // Get the time
     localtime_r(&next_time.tv_sec, &tm);
@@ -129,12 +131,7 @@ int main(int argc, char *argv[]) {
       if (tm.tm_sec != old_sec) {
         if (sock->isMessage()) {
           do {
-            s = sock->getMessage();
-            cout << " : [" << s << "]\n";
-            if (s == "exit") {
-              running = false;
-              break;
-            }
+            cout << " : [" << sock->getMessage() << "]\n";
           } while (sock->isMessage());
         }
         else {
@@ -293,6 +290,3 @@ bool check_for_file(std::string &s) {
 void spawnThread(SocketListener* sock) {
   sock->listen();
 }
-
-// Main function
-int main() {
