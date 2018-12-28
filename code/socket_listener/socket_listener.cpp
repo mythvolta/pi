@@ -19,7 +19,6 @@
 
 using namespace std;
 
-// Method to see if a character is printable
 /*
 bool IsUnprintable(char c) {
   cout << "c = " << c << " = " << static_cast<unsigned char>(c) << " = " << isprint(static_cast<unsigned char>(c)) << "\n";
@@ -34,14 +33,13 @@ class SocketListener {
   ~SocketListener();
   bool isMessage();
   string getMessage();
+  void listen();
 
  private:
   // Constants
   const static uint16_t BUFSIZE = 32;
 
   // Member functions
-  int spawnThread();
-  void listen();
   bool addMessage(char buf[], int len);
 
   // Member variables
@@ -53,7 +51,6 @@ class SocketListener {
 // Public Interface
 SocketListener::SocketListener(uint16_t port_number) : port(port_number) {
   cout << "Listening for messages on port " << port << "\n";
-  spawnThread();
 }
 SocketListener::~SocketListener() {
   cout << "Done listening for messages on port " << port << "\n";
@@ -64,32 +61,22 @@ bool SocketListener::isMessage() {
 string SocketListener::getMessage() {
   // Make sure we have a message in the queue
   if (messageQueue.empty()) {
-    return ""; // nullptr;
+    return "";
   }
 
-  // Lock the queue while we're removing from it
+  // Return the first message in the queue,
+  //  being sure to lock the queue beforehand
   lock_guard<mutex> lk(messageQueueLock);
-  
-  // Return the first message in the queue
   string s = messageQueue.front();
   messageQueue.pop();
   return s;
 }
 // -------------------------------------
 
-// Spawn another thread to listen to UDP messages
-int SocketListener::spawnThread() {
-  listen();
-  return 0;
-}
-
 // Actually listen to UDP messages
 void SocketListener::listen() {
-  cout << "Not yet.\n";
-
   // Create a UDP socket
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
-  cout << "File descriptor = " << fd << "\n";
   if (fd < 0) {
     cerr << "Could not create a UDP socket!\n";
     return;
@@ -113,7 +100,6 @@ void SocketListener::listen() {
     cerr << "ERROR on binding\n";
     return;
   }
-  cout << "bound to port " << addr.sin_port << " = " << htons(addr.sin_port) << "\n";
 
   // Show the data
   char buf[BUFSIZE];
@@ -123,45 +109,82 @@ void SocketListener::listen() {
     bytes_read = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&addr, &len);
     if (bytes_read < 0) {
       cerr << "ERROR in recvfrom\n";
-			return;
+      return;
     }
 
     // Add this message to the queue
     success = addMessage(buf, bytes_read);
   }
 
-  //this_thread::sleep_for(chrono::seconds(20));
-  cout << "File descriptor was " << fd << "\n";
+  cout << "Done listening for UDP packets\n";
 }
 
 // Manipulate the message queue
 bool SocketListener::addMessage(char buf[], int len) {
-  // Lock the queue while we're adding to it
-  lock_guard<mutex> lk(messageQueueLock);
-
   // Push the new message onto the queue, ignoring the newlines
   if (buf[len - 1] == '\n') {
     --len;
+
+    // Short circuit if all we had was a newline
+    if (len <= 0) {
+      return true;
+    }
   }
+
+  // Create the string and print it out
   string s(buf, buf + len);
   //replace_if(s.begin(), s.end(), IsUnprintable, 'X');
-  messageQueue.push(s);
-  
+  cout << s.size() << " : " << s << "\n";
+
   // Check for exit condition
   if (s == "exit") {
     return false;
   }
-  
-  cout << s.size() << " : " << s << "\n";
+
+  // Lock the queue while we're adding to it
+  lock_guard<mutex> lk(messageQueueLock);
+  messageQueue.push(s);
   return true;
 }
 
+// Method to see if a character is printable
+// Actually listen in a new thread
+void spawnThread(SocketListener* sock) {
+  sock->listen();
+}
+
+// Main function
 int main() {
-  cout << "Creating a SocketListener\n";
-  auto s = make_unique<SocketListener>(1234);
-  cout << "Done, here are the messages:\n";
-  int i = 0;
-  while (s->isMessage()) {
-    cout << ++i << " : [" << s->getMessage() << "]\n";
+  cout << "Creating a SocketListener, PID=" << getpid() << "\n";
+  auto sock = make_unique<SocketListener>(1234);
+
+  cout << "Listening for UDP message in a new thread\n";
+  thread t(spawnThread, sock.get());
+
+  cout << "Sleeps until exit command, printing messages every 5 seconds\n";
+  int n = 0;
+  string s;
+  bool running = true;
+  while (running) {
+    this_thread::sleep_for(chrono::seconds(5));
+    if (sock->isMessage()) {
+      do {
+        s = sock->getMessage();
+        cout << ++n << " : [" << s << "]\n";
+        if (s == "exit") {
+          running = false;
+          break;
+        }
+      } while (sock->isMessage());
+    }
+    else {
+      cout << "No new messages\n";
+    }
   }
+    
+  cout << "Terminating thread\n";
+  t.detach();
+
+  //delete sock;
+  //cout << "Really done now, deleted sock." << endl;
 }
