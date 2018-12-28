@@ -2,7 +2,7 @@
 # Completely build the socket listener
 
 # Global variables
-STD        := -lstdc++ -std=c++17 -pthread
+STD        := -lstdc++ -std=c++14 -pthread
 CC         := gcc $(STD)
 CXX        := g++ $(STD)
 WARN       := -Wall -Wextra -Wfatal-errors
@@ -14,7 +14,7 @@ BINARIES   := mythclock
 
 # Where our library resides. You mostly only need to change the
 # RGB_LIB_DISTRIBUTION, this is where the library is checked out.
-RGB_LIB_DISTRIBUTION := /home/volta/toolbox/rpi-rgb-led-matrix
+RGB_LIB_DISTRIBUTION := /home/pi/code/rpi-rgb-led-matrix
 RGB_INCDIR           := $(RGB_LIB_DISTRIBUTION)/include
 RGB_LIBDIR           := $(RGB_LIB_DISTRIBUTION)/lib
 RGB_LIBRARY_NAME     := rgbmatrix
