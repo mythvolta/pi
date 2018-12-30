@@ -113,10 +113,6 @@ bool MythClock::changeOfHour() {
 
 // Change the clock position on the hour
 void MythClock::changeClockPosition() {
-  // Show a log message
-  logTime();
-  cout << "Clock position changing\n";
-
   // Change the clock position every hour
   x_offset = rand() % 4 + 1;
   y_offset = rand() % 6 - 1;
@@ -137,7 +133,7 @@ void MythClock::changeClockPosition() {
 
   // Show a log message
   logTime();
-  cout << "Clock intensity " << font_intensity << " @ (" << x_offset << ", " << y_offset << ")\n";
+  cout << "Clock intensity " << font_intensity << " @ (" << x_offset << ", " << y_offset << ")" << endl;
 }
 
 // Set a message to display
@@ -182,7 +178,7 @@ void MythClock::showMessage() {
 
     // Reset to clock mode when the string is done
     if (++text_string_start > text_string.size()) {
-      cout << "Text buffer is complete\n";
+      cout << "Text buffer is complete" << endl;
       font_color = rgb_matrix::Color(font_intensity, 0, 0);
       text_string_start = 0;
       text_offset = -32;
@@ -267,11 +263,11 @@ int main(int argc, char *argv[]) {
 
   // Start listening for UDP messages
   mc.logTime();
-  cout << "Creating a SocketListener, PID=" << getpid() << "\n";
+  cout << "Creating a SocketListener, PID=" << getpid() << endl;
   const uint16_t udp_port = 23714;
   auto sock = make_unique<SocketListener>(udp_port);
   mc.logTime();
-  cout << "Listening for UDP messages on port " << udp_port << "\n";
+  cout << "Listening for UDP messages on port " << udp_port << endl;
   thread t(spawnThread, sock.get());
 
   // Loop forever
@@ -290,7 +286,7 @@ int main(int argc, char *argv[]) {
         if (sock->isMessage()) {
           const string socket_message = sock->getMessage();
           mc.logTime();
-          cout << "UDP:" << udp_port << " message (" << socket_message << ")\n";
+          cout << "UDP:" << udp_port << " message (" << socket_message << ")" << endl;
           mc.setMessage(socket_message);
         }
 
@@ -312,9 +308,8 @@ int main(int argc, char *argv[]) {
 
   // Clear everything
   mc.clear();
-  cout << "\n";
   mc.logTime();
-  cout << "Terminating thread\n";
+  cout << "Terminating thread" << endl;
   t.detach();
 
   return 0;
