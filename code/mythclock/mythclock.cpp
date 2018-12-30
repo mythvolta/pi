@@ -40,15 +40,11 @@ MythClock::MythClock() :
     font_large(matrix_path + "/fonts/6x13B.bdf"),
     font_small(matrix_path + "/fonts/6x13B.bdf"),
     font_small_width(6),
-    time_format("%H%M"),
+    time_format("%H%M"), x_offset(2), y_offset(2), x_scroll(0),
     bg_color(0, 0, 0), outline_color(0, 0, 32), font_color(0, 128, 0),
     old_hour(-1), old_min(-1), old_sec(-1), old_intensity(-1),
-    text_string("mythclock"), text_string_start(0), text_offset(-32), show_message(true) {
-  // Set the initial time
-  time_initial = time(NULL);
-  next_time.tv_sec = time_initial;
-  next_time.tv_nsec = 0;
-
+    text_string("mythclock"), text_string_start(0), text_offset(0),
+    show_message(true) {
   // Load font
   font.LoadFont(font_large.c_str());
   outline_font = font.CreateOutlineFont();
@@ -72,6 +68,11 @@ bool MythClock::createMatrix() {
   // Set the brightness and create the canvas
   matrix->SetBrightness(brightness);
   offscreen = matrix->CreateFrameCanvas();
+
+  // Set the initial time
+  time_initial = time(NULL);
+  next_time.tv_sec = time_initial;
+  next_time.tv_nsec = 0;
   return true;
 }
 
@@ -141,19 +142,31 @@ void MythClock::changeClockPosition() {
 
 // Set a message to display
 void MythClock::setMessage(const string& s) {
-  // Bright blue for messages
-  font_color = rgb_matrix::Color(32, 128, 128);
   text_string = s;
-  //font.LoadFont(font_small.c_str());
   text_string_start = 0;
   show_message = true;
+  x_scroll = -1;
 }
 
 // Show a message
 void MythClock::showMessage() {
+  // Make sure the clock is not still scrolling
+  if (x_scroll < 0) {
+    // If we have scrolled off the screen, then show the message
+    if (x_scroll < -32) {
+      // Bright blue for messages
+      font_color = rgb_matrix::Color(32, 128, 128);
+      //font.LoadFont(font_small.c_str());
+      x_scroll = 48;
+    }
+    else {
+      showClock();
+      return;
+    }
+  }
+
   // Copy part of the text
   strcpy(text_buffer, text_string.substr(text_string_start, 8).c_str());
-  //strftime(clock_buffer, sizeof(clock_buffer), "%H%M%S", &tm);
 
   // Clear the screen
   offscreen->Fill(bg_color.r, bg_color.g, bg_color.b);
@@ -162,12 +175,6 @@ void MythClock::showMessage() {
   rgb_matrix::DrawText(offscreen, font, -text_offset, font.baseline(),
     font_color, NULL, text_buffer, 1);
 
-  // Draw the clock on a second line (no more)
-  /*
-  rgb_matrix::DrawText(offscreen, font, 0, font.baseline() + 8,
-    font_color, NULL, clock_buffer, 0);
-  */
-  
   // Once text_offset reaches font_small_width, go to the next letter
   if (++text_offset > font_small_width) {
     // Log whether or not we are done with the message
@@ -197,23 +204,28 @@ void MythClock::showClock() {
  
   // Draw the outline
   if (with_outline) {
-    rgb_matrix::DrawText(offscreen, *outline_font, x_offset - 1, y_offset + font.baseline(),
+    rgb_matrix::DrawText(offscreen, *outline_font, x_offset - 1 + x_scroll, y_offset + font.baseline(),
       outline_color, NULL, clock_buffer, letter_spacing - 2);
   }
 
   // Draw the clock in red
-  rgb_matrix::DrawText(offscreen, font, x_offset, y_offset + font.baseline(),
+  rgb_matrix::DrawText(offscreen, font, x_offset + x_scroll, y_offset + font.baseline(),
     font_color, NULL, clock_buffer, letter_spacing);
 }
 
 // Determine how long to sleep based on the mode
 void MythClock::sleep() {
-  if (isMessage()) {
+  if (isMessage() || x_scroll != 0) {
     // Wait 30 ms before showing the next part of the text
     next_time.tv_nsec += 30000000;
     if (next_time.tv_nsec >= 1000000000) {
       next_time.tv_nsec -= 1000000000;
       next_time.tv_sec += 1;
+    }
+    
+    // Move the clock left if we are showing it
+    if (x_scroll != 0 && (isMessage() == (x_scroll < 0))) {
+      --x_scroll;
     }
   }
   else {
@@ -253,9 +265,6 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // Update the time immediately
-  mc.getNewTime();
-
   // Start listening for UDP messages
   mc.logTime();
   cout << "Creating a SocketListener, PID=" << getpid() << "\n";
@@ -264,9 +273,6 @@ int main(int argc, char *argv[]) {
   mc.logTime();
   cout << "Listening for UDP messages on port " << udp_port << "\n";
   thread t(spawnThread, sock.get());
-
-  // Log the first time we show the clock after a message
-  bool first_clock = true;
 
   // Loop forever
   while (!interrupt_received) {
@@ -280,20 +286,12 @@ int main(int argc, char *argv[]) {
     else {
       // Handle changes of second/minute/hour
       if (mc.changeOfSecond()) {
-        // Log when we show the clock for the first time
-        if (first_clock) {
-          first_clock = false;
-          mc.logTime();
-          cout << "Switching back to the clock\n";
-        }
-
         // Check for socket messages every second
         if (sock->isMessage()) {
           const string socket_message = sock->getMessage();
           mc.logTime();
           cout << "UDP:" << udp_port << " message (" << socket_message << ")\n";
           mc.setMessage(socket_message);
-          first_clock = true;
         }
 
         // Only move the clock every hour
@@ -314,6 +312,7 @@ int main(int argc, char *argv[]) {
 
   // Clear everything
   mc.clear();
+  cout << "\n";
   mc.logTime();
   cout << "Terminating thread\n";
   t.detach();

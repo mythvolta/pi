@@ -60,6 +60,7 @@ class MythClock {
   // These can change every hour
   int x_offset;
   int y_offset;
+  int x_scroll;  // Scroll the clock left when a new message comes
   int font_intensity;
   bool with_outline;
   // Vector of colors
