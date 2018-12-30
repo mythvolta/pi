@@ -14,13 +14,11 @@
 class MythClock {
  public:
   MythClock();
-  ~MythClock();
+  ~MythClock() = default;
   // Initialize the matrix 
   bool createMatrix();
-  void writeToScreen();
   void setMessage(const std::string& s);
   // Check to see what digit has changed
-  bool showClock();
   void getNewTime();
   bool changeOfSecond();
   bool changeOfMinute();
@@ -29,21 +27,25 @@ class MythClock {
   void changeClockPosition();
   //bool check_for_file(std::string &s);
   // Show a message instead of a clock
+  inline bool isMessage() {
+    return show_message;
+  }
   void showMessage();
+  void showClock();
   // Sleep for a certain amount of time
   void sleep();
   // Clear the matrix
   void clear();
+  // Print a log message with the time
+  void logTime();
 
  private:
   // Constants for the paths
   const std::string matrix_path;
-  //const static std::string status_filename = "/home/pi/toolbox/code/mythclock/mythclock.status";
   // More constants for the font
   const std::string font_large;
-  //const std::string font_small = matrix_path + "/fonts/4x6.bdf";
   const std::string font_small;
-  const static int font_small_width = 4 + 1;
+  const int font_small_width;
   const char *time_format;
   // Set the color intensity at every hour
   const int intensity_hour[24] = {24, 24, 24, 24, 24, 24, 32, 36, 40, 48, 64, 96, 128, 128, 128, 128, 96, 64, 48, 36, 32, 24, 24, 24};
@@ -85,5 +87,5 @@ class MythClock {
   std::string text_string;
   unsigned int text_string_start;
   int text_offset;
-  bool show_clock;
+  bool show_message;
 };

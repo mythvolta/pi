@@ -24,19 +24,14 @@ bool IsUnprintable(char c) {
 }
 */
 
-// Public Interface
-SocketListener::SocketListener(uint16_t port_number) : port(port_number) {
-  cout << "Listening for messages on port " << port << "\n";
-}
-SocketListener::~SocketListener() {
-  cout << "Done listening for messages on port " << port << "\n";
-}
-bool SocketListener::isMessage() {
-  return (!messageQueue.empty());
-}
+// Constructor/Destructor
+SocketListener::SocketListener(uint16_t port_number) : port(port_number) {}
+SocketListener::~SocketListener() = default;
+
+// Get a message if there is one
 string SocketListener::getMessage() {
   // Make sure we have a message in the queue
-  if (messageQueue.empty()) {
+  if (!isMessage()) {
     return "";
   }
 
@@ -91,8 +86,6 @@ void SocketListener::listen() {
     // Add this message to the queue
     success = addMessage(buf, bytes_read);
   }
-
-  cout << "Done listening for UDP packets\n";
 }
 
 // Manipulate the message queue
@@ -107,17 +100,10 @@ bool SocketListener::addMessage(char buf[], int len) {
     }
   }
 
-  // Create the string and print it out
+  // Create the string
   string s(buf, buf + len);
   //replace_if(s.begin(), s.end(), IsUnprintable, 'X');
-  cout << s.size() << " : " << s << "\n";
-
-  // Check for exit condition
-  /*
-  if (s == "exit") {
-    return false;
-  }
-  */
+  cout << "UDP:" << port << " [" << s.size() << "] : " << s << "\n";
 
   // Lock the queue while we're adding to it
   lock_guard<mutex> lk(messageQueueLock);

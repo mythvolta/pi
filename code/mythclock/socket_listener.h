@@ -12,7 +12,9 @@ class SocketListener {
  public:
   SocketListener(uint16_t port_number=8243);
   ~SocketListener();
-  bool isMessage();
+  inline bool isMessage() {
+    return !messageQueue.empty();
+  }
   std::string getMessage();
   void listen();
 
