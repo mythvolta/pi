@@ -37,7 +37,7 @@ class SocketListener {
 
  private:
   // Constants
-  const static uint16_t BUFSIZE = 32;
+  const static uint16_t BUFSIZE = 128; // Increase the buffer size
 
   // Member functions
   bool addMessage(char buf[], int len);
