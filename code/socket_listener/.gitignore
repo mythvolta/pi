@@ -1,5 +1,0 @@
-# All object files
-*.o
-
-# These binary files
-socket_listener
