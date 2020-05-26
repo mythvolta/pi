@@ -15,8 +15,12 @@ if [[ -f "/opt/vc/bin/vcgencmd" ]]; then
     fi
 fi
 
-# Show the temperatures, and a bit more output
+# Get the CPU frequency
+armFreqMHz=`vcgencmd get_config arm_freq`
+
+# Show the output
 echo
 date
-echo "CPU: $cpuTempC°C/$cpuTempF°F GPU: $gpuTempC°C/$gpuTempF°F"
+echo "CPU: $cpuTempC°C/$cpuTempF°F @ ${armFreqMHz/arm_freq=} MHz"
+#echo "GPU: $gpuTempC°C/$gpuTempF°F"
 echo
