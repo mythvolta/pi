@@ -23,4 +23,3 @@ echo
 date
 echo "CPU: $cpuTempC°C/$cpuTempF°F @ ${armFreqMHz/arm_freq=} MHz"
 #echo "GPU: $gpuTempC°C/$gpuTempF°F"
-echo
