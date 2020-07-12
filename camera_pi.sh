@@ -8,7 +8,8 @@
 # Set some variables
 DIR="$HOME/.camera"
 DATE=`date +%Y-%m-%d_%H%M%S`
-FILE="$DIR/${HOSTNAME}_pi_${DATE}.jpg"
+FILE="${HOSTNAME}_pi_${DATE}.jpg"
+LINK="movie/${HOSTNAME}_pi_latest.jpg"
 OPTS="-awb off -awbg 1.5,1.2 -ISO 100 -n"
 
 # Host-specific options
@@ -22,14 +23,15 @@ then
 	OPTS+=" -vf -hf"
 fi
 
-# Capture a single image
-raspistill -o $FILE $OPTS
+# Capture a single image, and make a link
+raspistill -o "$DIR/$FILE" $OPTS
+ln -sf "../$FILE" "$DIR/$LINK"
 
 # If fswebcam is installed, also use the USB webcam
 if [[ -e "$(command -v fswebcam)" ]]
 then
 	sleep 10
 	DATE=`date +%Y-%m-%d_%H%M%S`
-	FILE="$DIR/${HOSTNAME}_logitech_${DATE}.jpg"
-	fswebcam -d /dev/video1 -r 1600x1200 --no-banner $FILE
+	FILE="${HOSTNAME}_logitech_${DATE}.jpg"
+	fswebcam -d /dev/video1 -r 1600x1200 --no-banner "$DIR/$FILE"
 fi
