@@ -55,9 +55,9 @@ do
 		date
 
 		# Remove the files
-		#rm ${F}*.jpg
-		#N=`ls -1 ${F}*.jpg | wc -l`
-		#echo "  $D: $N files"
+		rm ${F}*.jpg
+		N=`ls -1 ${F}*.jpg | wc -l`
+		echo "  $D: $N files"
 
 		# Stop timer
 		X=`date`
