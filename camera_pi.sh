@@ -10,7 +10,7 @@ DIR="$HOME/.camera"
 DATE=`date +%Y-%m-%d_%H%M%S`
 FILE="${HOSTNAME}_pi_${DATE}.jpg"
 LINK="movie/${HOSTNAME}_pi_latest.jpg"
-OPTS="-awb off -awbg 1.5,1.2 -ISO 100 -n"
+OPTS="-ex auto -awb off -awbg 1.5,1.2 -n"
 
 # Host-specific options
 if [[ $HOSTNAME == "zerocam" ]]
