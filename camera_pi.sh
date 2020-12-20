@@ -16,7 +16,9 @@ OPTS="-ex auto -awb off -awbg 1.5,1.2 -n"
 if [[ $HOSTNAME == "zerocam" ]]
 then
 	# Rotate by 180 degrees
-	OPTS+=" -vf -hf"
+	#OPTS+=" -vf -hf"
+	# No rotation necessary
+	OPTS+=""
 elif [[ $HOSTNAME == "dragon" ]]
 then
 	# Rotate by 180 degrees
